@@ -1,0 +1,36 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    labels: [ ]
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: cargo
+    directory: /
+    labels: [ ]
+    schedule:
+      interval: weekly
+    versioning-strategy: increase
+
+  - package-ecosystem: npm
+    directory: /templates
+    labels: [ ]
+    schedule:
+      interval: weekly
+    versioning-strategy: increase
+    groups:
+      aws-sdk:
+        patterns:
+        - "@aws-sdk/**"
+        - "@smithy/**"
+        - "aws-sdk-client-mock"
+        - "aws-sdk-client-mock-jest"
+      aws-cdk:
+        patterns:
+        - "@aws-cdk/**"
+        - "aws-cdk-lib"
+        - "aws-cdk"
+      powertools:
+        patterns:
+        - "@aws-lambda-powertools/**"
