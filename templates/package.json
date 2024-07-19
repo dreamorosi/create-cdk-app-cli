@@ -9,36 +9,29 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "vitest",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "install:parameters": "npm i @aws-lambda-powertools/parameters@latest @aws-sdk/client-ssm @aws-sdk/client-secrets-manager @aws-sdk/client-appconfigdata @aws-sdk/client-dynamodb",
+    "install:idempotency": "npm i @aws-lambda-powertools/idempotency@latest @aws-sdk/client-dynamodb @aws-sdk/lib-dynamodb",
+    "install:batch": "npm i @aws-lambda-powertools/batch@latest",
+    "install:parser": "npm i @aws-lambda-powertools/parser@latest zod@latest"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.7.0",
-    "@types/node": "20.12.7",
-    "@types/aws-lambda": "^8.10.137",
-    "aws-cdk": "2.138.0",
-    "esbuild": "^0.20.2",
-    "tsx": "^4.7.2",
-    "typescript": "~5.4.5",
-    "vitest": "^1.5.0"
+    "@biomejs/biome": "^1.8.3",
+    "@types/node": "20.14.11",
+    "@types/aws-lambda": "^8.10.141",
+    "aws-cdk": "2.149.0",
+    "esbuild": "^0.23.0",
+    "tsx": "^4.16.2",
+    "typescript": "~5.5.3",
+    "vitest": "^2.0.3"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.138.0",
+    "aws-cdk-lib": "2.149.0",
     "constructs": "^10.0.0",
     "source-map-support": "^0.5.21",
-    "@aws-lambda-powertools/logger": "^2.1.0",
-    "@aws-lambda-powertools/tracer": "^2.1.0",
-    "@aws-lambda-powertools/metrics": "^2.1.0",
-    "@aws-lambda-powertools/parameters": "^2.1.0",
-    "@aws-sdk/client-ssm": "3.556.0",
-    "@aws-sdk/client-secrets-manager": "3.556.0",
-    "@aws-sdk/client-appconfigdata": "3.556.0",
-    "@aws-lambda-powertools/idempotency": "^2.1.0",
-    "@aws-sdk/client-dynamodb": "3.556.0",
-    "@aws-sdk/lib-dynamodb": "3.556.0",
-    "@aws-lambda-powertools/batch": "^2.1.0",
-    "@aws-lambda-powertools/parser": "^2.1.0-beta",
-    "zod": "~3.0.0",
-    "@aws-lambda-powertools/jmespath": "^2.1.0",
+    "@aws-lambda-powertools/logger": "^2.5.0",
+    "@aws-lambda-powertools/tracer": "^2.5.0",
+    "@aws-lambda-powertools/metrics": "^2.5.0",
     "@middy/core": "4.7.0"
   }
 }
