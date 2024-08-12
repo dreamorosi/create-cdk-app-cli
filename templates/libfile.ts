@@ -1,5 +1,5 @@
 import { Stack, type StackProps, CfnOutput, RemovalPolicy } from 'aws-cdk-lib';
-import { Construct } from 'constructs';
+import type { Construct } from 'constructs';
 import { Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
@@ -26,9 +26,9 @@ export class pascalcase-nameStack extends Stack {
         mainFields: ['module', 'main'],
         sourceMap: true,
         format: OutputFormat.ESM,
+        banner: 
+            "import { createRequire } from 'module';const require = createRequire(import.meta.url);",
       },
-      banner: 
-          "import { createRequire } from 'module';const require = createRequire(import.meta.url);",
     });
 
     new CfnOutput(this, 'FunctionArn', {
