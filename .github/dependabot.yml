@@ -11,7 +11,6 @@ updates:
     labels: [ ]
     schedule:
       interval: monthly
-    versioning-strategy: increase
 
   - package-ecosystem: npm
     directory: /templates
