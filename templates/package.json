@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "aws-cdk-lib": "2.194.0",
-    "constructs": "^10.0.0",
+    "constructs": "^10.4.2",
     "source-map-support": "^0.5.21",
     "@aws-lambda-powertools/logger": "^2.19.0",
     "@aws-lambda-powertools/tracer": "^2.19.0",
