@@ -10,28 +10,25 @@
     "watch": "tsc -w",
     "test": "vitest",
     "cdk": "cdk",
-    "install:parameters": "npm i @aws-lambda-powertools/parameters@latest @aws-sdk/client-ssm @aws-sdk/client-secrets-manager @aws-sdk/client-appconfigdata @aws-sdk/client-dynamodb",
-    "install:idempotency": "npm i @aws-lambda-powertools/idempotency@latest @aws-sdk/client-dynamodb @aws-sdk/lib-dynamodb",
-    "install:batch": "npm i @aws-lambda-powertools/batch@latest",
-    "install:parser": "npm i @aws-lambda-powertools/parser@latest zod@latest"
+    "update:deps": "npx npm-check-updates -u"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.8.3",
-    "@types/node": "20.14.11",
-    "@types/aws-lambda": "^8.10.141",
-    "aws-cdk": "2.149.0",
-    "esbuild": "^0.23.0",
-    "tsx": "^4.16.2",
-    "typescript": "~5.5.3",
-    "vitest": "^2.0.3"
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "22.15.3",
+    "@types/aws-lambda": "^8.10.149",
+    "aws-cdk": "2.1013.0",
+    "esbuild": "^0.25.3",
+    "tsx": "^4.19.4",
+    "typescript": "~5.8.3",
+    "vitest": "^3.1.2"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.149.0",
+    "aws-cdk-lib": "2.194.0",
     "constructs": "^10.0.0",
     "source-map-support": "^0.5.21",
-    "@aws-lambda-powertools/logger": "^2.5.0",
-    "@aws-lambda-powertools/tracer": "^2.5.0",
-    "@aws-lambda-powertools/metrics": "^2.5.0",
+    "@aws-lambda-powertools/logger": "^2.19.0",
+    "@aws-lambda-powertools/tracer": "^2.19.0",
+    "@aws-lambda-powertools/metrics": "^2.19.0",
     "@middy/core": "4.7.0"
   }
 }
