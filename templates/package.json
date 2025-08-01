@@ -16,14 +16,14 @@
     "@biomejs/biome": "^1.9.4",
     "@types/node": "24.0.10",
     "@types/aws-lambda": "^8.10.149",
-    "aws-cdk": "2.1020.0",
+    "aws-cdk": "2.1023.0",
     "esbuild": "^0.25.3",
     "tsx": "^4.20.3",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.203.0",
+    "aws-cdk-lib": "2.208.0",
     "constructs": "^10.4.2",
     "source-map-support": "^0.5.21",
     "@aws-lambda-powertools/logger": "^2.22.0",
