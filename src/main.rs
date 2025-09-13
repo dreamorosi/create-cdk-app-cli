@@ -20,7 +20,7 @@ async fn get_remote_config(url: &str) -> Result<String, Box<dyn std::error::Erro
 }
 
 const TSCONFIG_URL: &str = "https://gist.github.com/dreamorosi/8785f2a8ae9e868be65de1a44018b936/raw/e7b125699fc752ac3cdfbe5a8528e7c00eb3220d/tsconfig.json";
-const BIOMECONFIG_URL: &str = "https://gist.github.com/dreamorosi/3daec171ff98f2c921eb3a19459256dd/raw/3ab22a2b1e203eb0a9e55c9e341f06d8fa43c26d/biome.json";
+const BIOMECONFIG_URL: &str = "https://gist.github.com/dreamorosi/3daec171ff98f2c921eb3a19459256dd/raw/076ca7b945de6577de0b467d6a269d8ea160561d/biome.json";
 
 fn main() {
     // Parse the CLI arguments
@@ -75,12 +75,7 @@ fn main() {
     // Get the bin file from the template & replace "app-name" with the actual app name
     let bin_file = String::from_utf8_lossy(archive.get("binfile.ts").expect("Failed to get binfile.ts"))
         .replace("lowercase-name", &app_name_lower)
-        .replace("pascalcase-name", &app_name_pascal);
-    // Get the test file from the template & replace "app-name" with the actual app name
-    let test_file = String::from_utf8_lossy(archive.get("testfile.ts").expect("Failed to get testfile.ts"))
-        .replace("lowercase-name", &app_name_lower)
-        .replace("pascalcase-name", &app_name_pascal);
-    // Get the lib file from the template & replace "app-name" with the actual app name
+        .replace("pascalcase-name", &app_name_pascal);// Get the lib file from the template & replace "app-name" with the actual app name
     let lib_file = String::from_utf8_lossy(archive.get("libfile.ts").expect("Failed to get libfile.ts"))
         .replace("pascalcase-name", &app_name_pascal);
     // Get the src file from the template
@@ -92,7 +87,13 @@ fn main() {
     let biomeconfig = get_remote_config(BIOMECONFIG_URL).expect("Failed to fetch biome.json");
     // Get payload.json file from the template
     let events_file = archive.get("payload.json").expect("Failed to get payload.json");
-
+    // Get cdk.context.json file from the template
+    let cdk_context = archive.get("cdk.context.json").expect("Failed to get cdk.context.json");
+    // Get the test file from the template
+    let test_file = archive.get("testfile.ts").expect("Failed to get testfile.ts");
+    // Get the context file from the template
+    let ctx_file = archive.get("contextfile.ts").expect("Failed to get contextfile.ts");
+    
     // Create the directories
     std::fs::create_dir_all(&base_dir).expect("Failed to create base directory");
     std::fs::create_dir_all(&bin_dir).expect("Failed to create bin directory");
@@ -114,9 +115,11 @@ fn main() {
         format!("{}/{}.test.ts", test_dir, app_name_lower),
         test_file,
     ).expect("Failed to write test file");
+    std::fs::write(format!("{}/context.ts", test_dir), ctx_file).expect("Failed to write context.ts file");
     std::fs::write(format!("{}/{}-stack.ts", lib_dir, app_name_lower), lib_file).expect("Failed to write lib file");
     std::fs::write(format!("{}/index.ts", src_dir), src_file).expect("Failed to write src file");
     std::fs::write(format!("{}/payload.json", events_dir), events_file).expect("Failed to write payload.json");
+    std::fs::write(format!("{}/cdk.context.json", base_dir), cdk_context).expect("Failed to write cdk.context.json");
 
     spinner.success("Scaffolding complete!");
 

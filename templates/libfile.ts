@@ -1,6 +1,6 @@
 import { Stack, type StackProps, CfnOutput, RemovalPolicy } from 'aws-cdk-lib';
 import type { Construct } from 'constructs';
-import { Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
+import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 
@@ -17,17 +17,16 @@ export class pascalcase-nameStack extends Stack {
     const fn = new NodejsFunction(this, 'MyFunction', {
       functionName: fnName,
       logGroup,
-      runtime: Runtime.NODEJS_20_X,
+      runtime: Runtime.NODEJS_22_X,
       entry: './src/index.ts',
       handler: 'handler',
-      tracing: Tracing.ACTIVE,
       bundling: {
         minify: true,
         mainFields: ['module', 'main'],
         sourceMap: true,
         format: OutputFormat.ESM,
-        banner: 
-            "import { createRequire } from 'module';const require = createRequire(import.meta.url);",
+        /* banner: 
+            "import { createRequire } from 'module';const require = createRequire(import.meta.url);", */
       },
     });
 

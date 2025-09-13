@@ -1,15 +1,18 @@
-import { App } from 'aws-cdk-lib';
-import { Template } from 'aws-cdk-lib/assertions';
-import { pascalcase-nameStack } from '../lib/lowercase-name-stack.js';
-import { test } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { expect, test } from 'vitest';
+import { handler } from '../src/index.js';
+import { context } from './context.js';
 
-test('Stack has a function', () => {
-  const app = new App();
+test('Stack has a function', async () => {
+  // Prepare
+  const event = JSON.parse(readFileSync('./events/payload.json', 'utf-8'));
 
-  const stack = new pascalcase-nameStack(app, 'MyTestStack');
-  const template = Template.fromStack(stack);
+  // Act
+  const result = await handler(event, context);
 
-  template.hasResourceProperties('AWS::Lambda::Function', {
-    Runtime: 'nodejs20.x',
+  // Assess
+  expect(result).toEqual({
+    statusCode: 200,
+    body: JSON.stringify('Hello, World!'),
   });
 });
