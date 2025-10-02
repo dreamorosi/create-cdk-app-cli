@@ -23,7 +23,7 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.218.0",
+    "aws-cdk-lib": "2.219.0",
     "constructs": "^10.4.2",
     "source-map-support": "^0.5.21",
     "@aws-lambda-powertools/logger": "^2.27.0",
