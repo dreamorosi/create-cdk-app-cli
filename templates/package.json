@@ -18,7 +18,7 @@
     "@types/aws-lambda": "^8.10.149",
     "aws-cdk": "2.1029.4",
     "esbuild": "^0.25.8",
-    "tsx": "^4.20.5",
+    "tsx": "^4.20.6",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4"
   },
