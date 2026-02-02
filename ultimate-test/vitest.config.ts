@@ -1,10 +1,10 @@
 /// <reference types="vitest" />
 
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    environment: 'node',
+    environment: "node",
     testTimeout: 10000,
   },
 });

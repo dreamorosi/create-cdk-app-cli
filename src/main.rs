@@ -2,7 +2,6 @@ use clap::Parser;
 use include_assets::{include_dir, NamedArchive};
 use spinoff::{spinners, Color, Spinner};
 
-// Search for a pattern in a file and display the lines that contain it.
 #[derive(Parser)]
 #[command(version, about = "Create a new CDK project scaffold 🚀")]
 struct Cli {
@@ -13,35 +12,73 @@ struct Cli {
     no_install: bool,
 }
 
-#[tokio::main]
-async fn get_remote_config(url: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let resp = reqwest::get(url).await?.text().await?;
-    Ok(String::from(resp))
+struct AppNames {
+    lower: String,
+    pascal: String,
 }
 
-const TSCONFIG_URL: &str = "https://gist.github.com/dreamorosi/8785f2a8ae9e868be65de1a44018b936/raw/e7b125699fc752ac3cdfbe5a8528e7c00eb3220d/tsconfig.json";
-const BIOMECONFIG_URL: &str = "https://gist.github.com/dreamorosi/3daec171ff98f2c921eb3a19459256dd/raw/076ca7b945de6577de0b467d6a269d8ea160561d/biome.json";
+struct ProjectPaths {
+    base_dir: String,
+    bin_dir: String,
+    lib_dir: String,
+    test_dir: String,
+    src_dir: String,
+    events_dir: String,
+}
 
-fn main() {
-    // Parse the CLI arguments
-    let args = Cli::parse();
+struct ProjectFiles {
+    package_json: String,
+    cdk_json: String,
+    vitest_config: Vec<u8>,
+    git_ignore: Vec<u8>,
+    bin_file: String,
+    lib_file: String,
+    src_file: Vec<u8>,
+    events_file: Vec<u8>,
+    cdk_context: Vec<u8>,
+    test_file: Vec<u8>,
+    ctx_file: Vec<u8>,
+    tsconfig: String,
+    biomeconfig: String,
+}
 
-    let mut spinner = Spinner::new(
-        spinners::Dots,
-        format!("Creating a new CDK project with name {}...", args.app_name),
-        Color::Blue,
-    );
+const TSCONFIG_URL: &str = "https://gist.githubusercontent.com/dreamorosi/8785f2a8ae9e868be65de1a44018b936/raw/6e738f7abae160190a31b8d5bcdc5ff7af4c4cf6/tsconfig.json";
+const BIOMECONFIG_URL: &str = "https://gist.githubusercontent.com/dreamorosi/3daec171ff98f2c921eb3a19459256dd/raw/88f6aad32ebcb787e3655bf5d68a5a1c9e1e52ae/biome.json";
 
-    // Load the template files
-    let archive = NamedArchive::load(include_dir!("templates"));
+async fn get_remote_config(url: &str) -> Result<String, Box<dyn std::error::Error>> {
+    let resp = reqwest::get(url).await?.text().await?;
+    Ok(resp)
+}
 
-    // Remove dashes from the app name
-    let sanitized_app_name = args.app_name.replace('-', "");
+fn validate_and_normalize_app_name(app_name: &str) -> Result<String, String> {
+    if app_name.trim().is_empty() {
+        return Err("App name cannot be empty".to_string());
+    }
+    
+    // Normalize: trim whitespace and replace spaces with hyphens
+    let normalized = app_name.trim().replace(' ', "-");
+    
+    if normalized.len() > 100 {
+        return Err("App name is too long (max 100 characters)".to_string());
+    }
+    
+    // Check for invalid characters (allow letters, numbers, hyphens, underscores)
+    if !normalized.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
+        return Err("App name can only contain letters, numbers, spaces, hyphens, and underscores".to_string());
+    }
+    
+    // Check if directory already exists
+    if std::path::Path::new(&format!("./{}", normalized)).exists() {
+        return Err(format!("Directory '{}' already exists", normalized));
+    }
+    
+    Ok(normalized)
+}
 
-    // Generate the app name in different formats
+fn generate_app_names(app_name: &str) -> AppNames {
+    let sanitized_app_name = app_name.replace('-', "");
     let app_name_lower = sanitized_app_name.to_lowercase();
-    // Generate the PascalCase app name by splitting on dashes and capitalizing each part
-    let app_name_pascal = args.app_name
+    let app_name_pascal = app_name
         .split('-')
         .map(|part| {
             let mut chars = part.chars();
@@ -52,92 +89,229 @@ fn main() {
         })
         .collect::<String>();
 
-    // Use the original app name with dashes for the base directory
-    let base_dir = format!("./{}", args.app_name);
+    AppNames {
+        lower: app_name_lower,
+        pascal: app_name_pascal,
+    }
+}
 
-    // Keep other directories relative to the base directory
-    let bin_dir = format!("{}/bin", base_dir);
-    let lib_dir = format!("{}/lib", base_dir);
-    let test_dir = format!("{}/test", base_dir);
-    let src_dir = format!("{}/src", base_dir);
-    let events_dir = format!("{}/events", base_dir);
+fn create_project_paths(app_name: &str) -> ProjectPaths {
+    let base_dir = format!("./{}", app_name);
+    ProjectPaths {
+        bin_dir: format!("{}/bin", base_dir),
+        lib_dir: format!("{}/lib", base_dir),
+        test_dir: format!("{}/test", base_dir),
+        src_dir: format!("{}/src", base_dir),
+        events_dir: format!("{}/events", base_dir),
+        base_dir,
+    }
+}
 
-    // Get the package.json file from the template & replace "app-name" with the actual app name
-    let package_json = String::from_utf8_lossy(archive.get("package.json").expect("Failed to get package.json"))
-        .replace("lowercase-name", &app_name_lower);
-    // Get the cdk.json file from the template & replace "app-name" with the actual app name
-    let cdk_json = String::from_utf8_lossy(archive.get("cdk.json").expect("Failed to get cdk.json"))
-        .replace("lowercase-name", &app_name_lower);
-    // Get the vitest.config.ts file from the template
-    let vitest_config = archive.get("vitest.config.ts").expect("Failed to get vitest.config.ts");
-    // Get the gitignore file from the template
-    let git_ignore = archive.get(".gitignore").expect("Failed to get .gitignore");
-    // Get the bin file from the template & replace "app-name" with the actual app name
-    let bin_file = String::from_utf8_lossy(archive.get("binfile.ts").expect("Failed to get binfile.ts"))
-        .replace("lowercase-name", &app_name_lower)
-        .replace("pascalcase-name", &app_name_pascal);// Get the lib file from the template & replace "app-name" with the actual app name
-    let lib_file = String::from_utf8_lossy(archive.get("libfile.ts").expect("Failed to get libfile.ts"))
-        .replace("pascalcase-name", &app_name_pascal);
-    // Get the src file from the template
-    let src_file = archive.get("srcfile.ts").expect("Failed to get srcfile.ts");
+fn create_directories(paths: &ProjectPaths) -> Result<(), String> {
+    if let Err(e) = std::fs::create_dir_all(&paths.base_dir) {
+        return Err(format!("Could not create project directory '{}': {}", paths.base_dir, e));
+    }
+    if let Err(e) = std::fs::create_dir_all(&paths.bin_dir) {
+        return Err(format!("Could not create bin directory '{}': {}", paths.bin_dir, e));
+    }
+    if let Err(e) = std::fs::create_dir_all(&paths.lib_dir) {
+        return Err(format!("Could not create lib directory '{}': {}", paths.lib_dir, e));
+    }
+    if let Err(e) = std::fs::create_dir_all(&paths.test_dir) {
+        return Err(format!("Could not create test directory '{}': {}", paths.test_dir, e));
+    }
+    if let Err(e) = std::fs::create_dir_all(&paths.src_dir) {
+        return Err(format!("Could not create src directory '{}': {}", paths.src_dir, e));
+    }
+    if let Err(e) = std::fs::create_dir_all(&paths.events_dir) {
+        return Err(format!("Could not create events directory '{}': {}", paths.events_dir, e));
+    }
+    Ok(())
+}
 
-    // Get the tsconfig.json file from public gist
-    let tsconfig = get_remote_config(TSCONFIG_URL).expect("Failed to fetch tsconfig.json");
-    // Get the biome.json file from public gist
-    let biomeconfig = get_remote_config(BIOMECONFIG_URL).expect("Failed to fetch biome.json");
-    // Get payload.json file from the template
-    let events_file = archive.get("payload.json").expect("Failed to get payload.json");
-    // Get cdk.context.json file from the template
-    let cdk_context = archive.get("cdk.context.json").expect("Failed to get cdk.context.json");
-    // Get the test file from the template
-    let test_file = archive.get("testfile.ts").expect("Failed to get testfile.ts");
-    // Get the context file from the template
-    let ctx_file = archive.get("contextfile.ts").expect("Failed to get contextfile.ts");
-    
-    // Create the directories
-    std::fs::create_dir_all(&base_dir).expect("Failed to create base directory");
-    std::fs::create_dir_all(&bin_dir).expect("Failed to create bin directory");
-    std::fs::create_dir_all(&lib_dir).expect("Failed to create lib directory");
-    std::fs::create_dir_all(&test_dir).expect("Failed to create test directory");
-    std::fs::create_dir_all(&src_dir).expect("Failed to create src directory");
-    std::fs::create_dir_all(&events_dir).expect("Failed to create events directory");
+async fn load_template_files(app_names: &AppNames) -> Result<ProjectFiles, String> {
+    let archive = NamedArchive::load(include_dir!("templates"));
 
-    // write files
-    std::fs::write(format!("{}/.gitignore", base_dir), git_ignore).expect("Failed to write .gitignore");
-    std::fs::write(format!("{}/biome.json", base_dir), biomeconfig).expect("Failed to write biome.json");
-    std::fs::write(format!("{}/cdk.json", base_dir), cdk_json).expect("Failed to write cdk.json");
-    // TODO replace app name
-    std::fs::write(format!("{}/package.json", base_dir), package_json).expect("Failed to write package.json");
-    std::fs::write(format!("{}/tsconfig.json", base_dir), tsconfig).expect("Failed to write tsconfig.json");
-    std::fs::write(format!("{}/vitest.config.ts", base_dir), vitest_config).expect("Failed to write vitest.config.ts");
-    std::fs::write(format!("{}/{}.ts", bin_dir, app_name_lower), bin_file).expect("Failed to write bin file");
-    std::fs::write(
-        format!("{}/{}.test.ts", test_dir, app_name_lower),
+    // Get template files (these should always exist - if not, it's a broken installation)
+    let package_json = String::from_utf8_lossy(archive.get("package.json").expect("Installation corrupted: missing package.json template"))
+        .replace("lowercase-name", &app_names.lower);
+    let cdk_json = String::from_utf8_lossy(archive.get("cdk.json").expect("Installation corrupted: missing cdk.json template"))
+        .replace("lowercase-name", &app_names.lower);
+    let vitest_config = archive.get("vitest.config.ts").expect("Installation corrupted: missing vitest.config.ts template").to_vec();
+    let git_ignore = archive.get(".gitignore").expect("Installation corrupted: missing .gitignore template").to_vec();
+    let bin_file = String::from_utf8_lossy(archive.get("binfile.ts").expect("Installation corrupted: missing binfile.ts template"))
+        .replace("lowercase-name", &app_names.lower)
+        .replace("pascalcase-name", &app_names.pascal);
+    let lib_file = String::from_utf8_lossy(archive.get("libfile.ts").expect("Installation corrupted: missing libfile.ts template"))
+        .replace("pascalcase-name", &app_names.pascal);
+    let src_file = archive.get("srcfile.ts").expect("Installation corrupted: missing srcfile.ts template").to_vec();
+    let events_file = archive.get("payload.json").expect("Installation corrupted: missing payload.json template").to_vec();
+    let cdk_context = archive.get("cdk.context.json").expect("Installation corrupted: missing cdk.context.json template").to_vec();
+    let test_file = archive.get("testfile.ts").expect("Installation corrupted: missing testfile.ts template").to_vec();
+    let ctx_file = archive.get("contextfile.ts").expect("Installation corrupted: missing contextfile.ts template").to_vec();
+
+    // Fetch remote config files concurrently
+    let (tsconfig_result, biome_result) = tokio::join!(
+        get_remote_config(TSCONFIG_URL),
+        get_remote_config(BIOMECONFIG_URL)
+    );
+
+    let tsconfig = match tsconfig_result {
+        Ok(config) => config,
+        Err(e) => {
+            return Err(format!("Failed to fetch tsconfig.json from remote: {}. Please check your internet connection and try again.", e));
+        }
+    };
+    let biomeconfig = match biome_result {
+        Ok(config) => config,
+        Err(e) => {
+            return Err(format!("Failed to fetch biome.json from remote: {}. Please check your internet connection and try again.", e));
+        }
+    };
+
+    Ok(ProjectFiles {
+        package_json,
+        cdk_json,
+        vitest_config,
+        git_ignore,
+        bin_file,
+        lib_file,
+        src_file,
+        events_file,
+        cdk_context,
         test_file,
-    ).expect("Failed to write test file");
-    std::fs::write(format!("{}/context.ts", test_dir), ctx_file).expect("Failed to write context.ts file");
-    std::fs::write(format!("{}/{}-stack.ts", lib_dir, app_name_lower), lib_file).expect("Failed to write lib file");
-    std::fs::write(format!("{}/index.ts", src_dir), src_file).expect("Failed to write src file");
-    std::fs::write(format!("{}/payload.json", events_dir), events_file).expect("Failed to write payload.json");
-    std::fs::write(format!("{}/cdk.context.json", base_dir), cdk_context).expect("Failed to write cdk.context.json");
+        ctx_file,
+        tsconfig,
+        biomeconfig,
+    })
+}
+
+fn write_project_files(paths: &ProjectPaths, app_names: &AppNames, files: &ProjectFiles) -> Result<(), String> {
+    if let Err(e) = std::fs::write(format!("{}/.gitignore", paths.base_dir), &files.git_ignore) {
+        return Err(format!("Could not write .gitignore: {}", e));
+    }
+    if let Err(e) = std::fs::write(format!("{}/biome.json", paths.base_dir), &files.biomeconfig) {
+        return Err(format!("Could not write biome.json: {}", e));
+    }
+    if let Err(e) = std::fs::write(format!("{}/cdk.json", paths.base_dir), &files.cdk_json) {
+        return Err(format!("Could not write cdk.json: {}", e));
+    }
+    if let Err(e) = std::fs::write(format!("{}/package.json", paths.base_dir), &files.package_json) {
+        return Err(format!("Could not write package.json: {}", e));
+    }
+    if let Err(e) = std::fs::write(format!("{}/tsconfig.json", paths.base_dir), &files.tsconfig) {
+        return Err(format!("Could not write tsconfig.json: {}", e));
+    }
+    if let Err(e) = std::fs::write(format!("{}/vitest.config.ts", paths.base_dir), &files.vitest_config) {
+        return Err(format!("Could not write vitest.config.ts: {}", e));
+    }
+    if let Err(e) = std::fs::write(format!("{}/{}.ts", paths.bin_dir, app_names.lower), &files.bin_file) {
+        return Err(format!("Could not write bin file: {}", e));
+    }
+    if let Err(e) = std::fs::write(format!("{}/{}.test.ts", paths.test_dir, app_names.lower), &files.test_file) {
+        return Err(format!("Could not write test file: {}", e));
+    }
+    if let Err(e) = std::fs::write(format!("{}/context.ts", paths.test_dir), &files.ctx_file) {
+        return Err(format!("Could not write context.ts file: {}", e));
+    }
+    if let Err(e) = std::fs::write(format!("{}/{}-stack.ts", paths.lib_dir, app_names.lower), &files.lib_file) {
+        return Err(format!("Could not write lib file: {}", e));
+    }
+    if let Err(e) = std::fs::write(format!("{}/index.ts", paths.src_dir), &files.src_file) {
+        return Err(format!("Could not write src file: {}", e));
+    }
+    if let Err(e) = std::fs::write(format!("{}/payload.json", paths.events_dir), &files.events_file) {
+        return Err(format!("Could not write payload.json: {}", e));
+    }
+    if let Err(e) = std::fs::write(format!("{}/cdk.context.json", paths.base_dir), &files.cdk_context) {
+        return Err(format!("Could not write cdk.context.json: {}", e));
+    }
+    Ok(())
+}
+
+fn install_dependencies(base_dir: &str) -> Result<(), String> {
+    let mut spinner = Spinner::new(spinners::Dots, "Installing npm packages...", Color::Blue);
+    
+    let output = std::process::Command::new("npm")
+        .arg("install")
+        .current_dir(base_dir)
+        .output();
+    
+    match output {
+        Ok(result) => {
+            if !result.status.success() {
+                spinner.fail("npm install failed!");
+                let mut error_msg = format!("npm install failed with exit code: {:?}", result.status.code());
+                if !result.stderr.is_empty() {
+                    error_msg.push_str(&format!("\nnpm error: {}", String::from_utf8_lossy(&result.stderr)));
+                }
+                error_msg.push_str("\nYou can try running 'npm install' manually in the project directory.");
+                return Err(error_msg);
+            }
+            spinner.success("New CDK project created successfully!");
+        }
+        Err(e) => {
+            spinner.fail("Failed to run npm install!");
+            return Err(format!("Could not execute npm: {}. Make sure npm is installed and available in your PATH.", e));
+        }
+    }
+    Ok(())
+}
+
+#[tokio::main]
+async fn main() {
+    let args = Cli::parse();
+
+    // Validate and normalize app name
+    let app_name = match validate_and_normalize_app_name(&args.app_name) {
+        Ok(name) => name,
+        Err(e) => {
+            eprintln!("Error: {}", e);
+            std::process::exit(1);
+        }
+    };
+
+    let mut spinner = Spinner::new(
+        spinners::Dots,
+        format!("Creating a new CDK project with name {}...", app_name),
+        Color::Blue,
+    );
+
+    let app_names = generate_app_names(&app_name);
+    let paths = create_project_paths(&app_name);
+
+    if let Err(e) = create_directories(&paths) {
+        spinner.fail("Failed to create directories!");
+        eprintln!("Error: {}", e);
+        std::process::exit(1);
+    }
+
+    let files = match load_template_files(&app_names).await {
+        Ok(files) => files,
+        Err(e) => {
+            spinner.fail("Failed to load template files!");
+            eprintln!("Error: {}", e);
+            std::process::exit(1);
+        }
+    };
+
+    if let Err(e) = write_project_files(&paths, &app_names, &files) {
+        spinner.fail("Failed to write project files!");
+        eprintln!("Error: {}", e);
+        std::process::exit(1);
+    }
 
     spinner.success("Scaffolding complete!");
 
     if args.no_install {
-        println!("\nTo start working, run:\n\ncd {}", base_dir);
+        println!("\nTo start working, run:\n\ncd {}", paths.base_dir);
         return;
     }
 
-    // Create a spinner
-    let mut spinner = Spinner::new(spinners::Dots, "Installing npm packages...", Color::Blue);
+    if let Err(e) = install_dependencies(&paths.base_dir) {
+        eprintln!("Error: {}", e);
+        std::process::exit(1);
+    }
 
-    // Run npm install in the new project directory
-    std::process::Command::new("npm")
-        .arg("install")
-        .current_dir(&base_dir)
-        .output()
-        .expect("Failed to run npm install");
-
-    spinner.success("New CDK project created successfully!");
-    println!("\nTo start working, run:\n\ncd {}", base_dir);
+    println!("\nTo start working, run:\n\ncd {}", paths.base_dir);
 }

@@ -4,11 +4,11 @@ import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 
-export class pascalcase-nameStack extends Stack {
+export class ReferenceProjectStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const fnName = 'pascalcase-nameFn';
+    const fnName = 'ReferenceProjectFn';
     const logGroup = new LogGroup(this, 'MyLogGroup', {
       logGroupName: `/aws/lambda/${fnName}`,
       removalPolicy: RemovalPolicy.DESTROY,

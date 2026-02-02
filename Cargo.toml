@@ -1,6 +1,6 @@
 [package]
 name = "create-cdk-app"
-version = "0.5.0-beta"
+version = "0.6.0"
 edition = "2021"
 license = "MIT"
 authors = ["Andrea Amorosi <dreamorosi@gmail.com>"]

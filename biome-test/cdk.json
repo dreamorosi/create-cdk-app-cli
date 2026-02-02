@@ -1,5 +1,5 @@
 {
-  "app": "npx tsx bin/lowercase-name.ts",
+  "app": "npx tsx bin/biometest.ts",
   "watch": {
     "include": ["**"],
     "exclude": [

@@ -1,8 +1,8 @@
 {
-  "name": "lowercase-name",
+  "name": "ultimatetest",
   "version": "0.1.0",
   "bin": {
-    "infra": "bin/lowercase-name.js"
+    "infra": "bin/ultimatetest.js"
   },
   "type": "module",
   "scripts": {

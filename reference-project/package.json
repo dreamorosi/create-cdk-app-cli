@@ -1,8 +1,8 @@
 {
-  "name": "lowercase-name",
+  "name": "referenceproject",
   "version": "0.1.0",
   "bin": {
-    "infra": "bin/lowercase-name.js"
+    "infra": "bin/referenceproject.js"
   },
   "type": "module",
   "scripts": {

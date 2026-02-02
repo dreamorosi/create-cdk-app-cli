@@ -1,8 +1,8 @@
 {
-  "name": "lowercase-name",
+  "name": "biometest",
   "version": "0.1.0",
   "bin": {
-    "infra": "bin/lowercase-name.js"
+    "infra": "bin/biometest.js"
   },
   "type": "module",
   "scripts": {
