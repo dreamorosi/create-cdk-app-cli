@@ -1,5 +1,5 @@
 use clap::Parser;
-use include_assets::{include_dir, NamedArchive};
+use include_dir::{include_dir, Dir};
 use spinoff::{spinners, Color, Spinner};
 
 #[derive(Parser)]
@@ -130,25 +130,29 @@ fn create_directories(paths: &ProjectPaths) -> Result<(), String> {
 }
 
 async fn load_template_files(app_names: &AppNames) -> Result<ProjectFiles, String> {
-    let archive = NamedArchive::load(include_dir!("templates"));
+    static TEMPLATES: Dir = include_dir!("$CARGO_MANIFEST_DIR/templates");
+
+    let get = |name: &str| -> &[u8] {
+        TEMPLATES.get_file(name).unwrap_or_else(|| panic!("Installation corrupted: missing {} template", name)).contents()
+    };
 
     // Get template files (these should always exist - if not, it's a broken installation)
-    let package_json = String::from_utf8_lossy(archive.get("package.json").expect("Installation corrupted: missing package.json template"))
+    let package_json = String::from_utf8_lossy(get("package.json"))
         .replace("lowercase-name", &app_names.lower);
-    let cdk_json = String::from_utf8_lossy(archive.get("cdk.json").expect("Installation corrupted: missing cdk.json template"))
+    let cdk_json = String::from_utf8_lossy(get("cdk.json"))
         .replace("lowercase-name", &app_names.lower);
-    let vitest_config = archive.get("vitest.config.ts").expect("Installation corrupted: missing vitest.config.ts template").to_vec();
-    let git_ignore = archive.get(".gitignore").expect("Installation corrupted: missing .gitignore template").to_vec();
-    let bin_file = String::from_utf8_lossy(archive.get("binfile.ts").expect("Installation corrupted: missing binfile.ts template"))
+    let vitest_config = get("vitest.config.ts").to_vec();
+    let git_ignore = get(".gitignore").to_vec();
+    let bin_file = String::from_utf8_lossy(get("binfile.ts"))
         .replace("lowercase-name", &app_names.lower)
         .replace("pascalcase-name", &app_names.pascal);
-    let lib_file = String::from_utf8_lossy(archive.get("libfile.ts").expect("Installation corrupted: missing libfile.ts template"))
+    let lib_file = String::from_utf8_lossy(get("libfile.ts"))
         .replace("pascalcase-name", &app_names.pascal);
-    let src_file = archive.get("srcfile.ts").expect("Installation corrupted: missing srcfile.ts template").to_vec();
-    let events_file = archive.get("payload.json").expect("Installation corrupted: missing payload.json template").to_vec();
-    let cdk_context = archive.get("cdk.context.json").expect("Installation corrupted: missing cdk.context.json template").to_vec();
-    let test_file = archive.get("testfile.ts").expect("Installation corrupted: missing testfile.ts template").to_vec();
-    let ctx_file = archive.get("contextfile.ts").expect("Installation corrupted: missing contextfile.ts template").to_vec();
+    let src_file = get("srcfile.ts").to_vec();
+    let events_file = get("payload.json").to_vec();
+    let cdk_context = get("cdk.context.json").to_vec();
+    let test_file = get("testfile.ts").to_vec();
+    let ctx_file = get("contextfile.ts").to_vec();
 
     // Fetch remote config files concurrently
     let (tsconfig_result, biome_result) = tokio::join!(
