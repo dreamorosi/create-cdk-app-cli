@@ -150,35 +150,35 @@ fn create_directories(paths: &ProjectPaths) -> Result<(), String> {
 fn load_template_files(app_names: &AppNames) -> Result<ProjectFiles, String> {
     static TEMPLATES: Dir = include_dir!("$CARGO_MANIFEST_DIR/templates");
 
-    let get = |name: &str| -> &[u8] {
+    let get = |name: &str| -> Result<&[u8], String> {
         TEMPLATES
             .get_file(name)
-            .unwrap_or_else(|| panic!("Installation corrupted: missing {} template", name))
-            .contents()
+            .map(|file| file.contents())
+            .ok_or_else(|| format!("Installation corrupted: missing {} template", name))
     };
 
     // Get template files (these should always exist - if not, it's a broken installation)
     let package_json =
-        String::from_utf8_lossy(get("package.json")).replace("lowercase-name", &app_names.lower);
-    let package_lock_json = String::from_utf8_lossy(get("package-lock.json"))
+        String::from_utf8_lossy(get("package.json")?).replace("lowercase-name", &app_names.lower);
+    let package_lock_json = String::from_utf8_lossy(get("package-lock.json")?)
         .replace("lowercase-name", &app_names.lower)
         .into_bytes();
     let cdk_json =
-        String::from_utf8_lossy(get("cdk.json")).replace("lowercase-name", &app_names.lower);
-    let vitest_config = get("vitest.config.ts").to_vec();
-    let git_ignore = get(".gitignore").to_vec();
-    let bin_file = String::from_utf8_lossy(get("binfile.ts"))
+        String::from_utf8_lossy(get("cdk.json")?).replace("lowercase-name", &app_names.lower);
+    let vitest_config = get("vitest.config.ts")?.to_vec();
+    let git_ignore = get(".gitignore")?.to_vec();
+    let bin_file = String::from_utf8_lossy(get("binfile.ts")?)
         .replace("lowercase-name", &app_names.lower)
         .replace("pascalcase-name", &app_names.pascal);
     let lib_file =
-        String::from_utf8_lossy(get("libfile.ts")).replace("pascalcase-name", &app_names.pascal);
-    let src_file = get("srcfile.ts").to_vec();
-    let events_file = get("payload.json").to_vec();
-    let cdk_context = get("cdk.context.json").to_vec();
-    let test_file = get("index.test.ts").to_vec();
-    let ctx_file = get("contextfile.ts").to_vec();
-    let tsconfig = get("tsconfig.json").to_vec();
-    let biomeconfig = get("biome.json").to_vec();
+        String::from_utf8_lossy(get("libfile.ts")?).replace("pascalcase-name", &app_names.pascal);
+    let src_file = get("srcfile.ts")?.to_vec();
+    let events_file = get("payload.json")?.to_vec();
+    let cdk_context = get("cdk.context.json")?.to_vec();
+    let test_file = get("index.test.ts")?.to_vec();
+    let ctx_file = get("contextfile.ts")?.to_vec();
+    let tsconfig = get("tsconfig.json")?.to_vec();
+    let biomeconfig = get("biome.json")?.to_vec();
 
     Ok(ProjectFiles {
         package_json,
