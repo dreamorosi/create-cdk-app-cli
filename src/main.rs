@@ -75,10 +75,10 @@ fn validate_and_normalize_app_name(app_name: &str) -> Result<String, String> {
 }
 
 fn generate_app_names(app_name: &str) -> AppNames {
-    let sanitized_app_name = app_name.replace('-', "");
+    let sanitized_app_name = app_name.replace(['-', '_'], "");
     let app_name_lower = sanitized_app_name.to_lowercase();
     let app_name_pascal = app_name
-        .split('-')
+        .split(['-', '_'])
         .map(|part| {
             let mut chars = part.chars();
             chars
