@@ -22,7 +22,10 @@ tap = "dreamorosi/homebrew-tap"
 # Trigger releases via workflow_dispatch instead of tag push
 dispatch-releases = true
 
-# Pin GitHub Actions to full commit SHAs (supply-chain hardening)
+# Pin GitHub Actions to full commit SHAs (supply-chain hardening).
+# These are excluded from Dependabot (see .github/dependabot.yml) because
+# release.yml is generated from this file. To bump: update the SHA here,
+# run `dist generate`, and sync the checkout pin in version-bump.yml.
 [dist.github-action-commits]
 "actions/checkout" = "d23441a48e516b6c34aea4fa41551a30e30af803" # v6.1.0
 "actions/upload-artifact" = "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a" # v7.0.1
