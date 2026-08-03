@@ -19,3 +19,5 @@ install-updater = false
 publish-jobs = ["homebrew"]
 # A GitHub repo to push Homebrew formulas to
 tap = "dreamorosi/homebrew-tap"
+# Trigger releases via workflow_dispatch instead of tag push
+dispatch-releases = true
