@@ -5,6 +5,17 @@ updates:
     labels: [ ]
     schedule:
       interval: monthly
+    ignore:
+      # The SHA pins for these actions are managed in dist-workspace.toml
+      # under [dist.github-action-commits]. If Dependabot bumped them in
+      # release.yml directly, the file would drift from what `dist generate`
+      # produces and the release workflow's freshness check would fail.
+      # To update them: edit the SHA in dist-workspace.toml, run
+      # `dist generate`, update the pin in version-bump.yml (checkout),
+      # and commit the results.
+      - dependency-name: actions/checkout
+      - dependency-name: actions/upload-artifact
+      - dependency-name: actions/download-artifact
 
   - package-ecosystem: cargo
     directory: /

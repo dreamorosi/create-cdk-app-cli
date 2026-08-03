@@ -1,0 +1,61 @@
+name: Bump version and tag
+
+# Step 1 of the two-step release process:
+#   1. Run this workflow to bump the version, commit, and push tag vX.Y.Z
+#   2. Run the "Release" workflow, selecting the new tag as the ref to
+#      run on and passing it as the "Release Tag" input
+#
+# Uses the default GITHUB_TOKEN: since the release workflow is dispatched
+# manually (dispatch-releases mode), the tag push doesn't need to trigger
+# anything, so no PAT is required.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump level"
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+jobs:
+  bump-and-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        # Keep in sync with [dist.github-action-commits] in dist-workspace.toml
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          ref: main
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+        with:
+          toolchain: stable
+
+      - name: Install cargo-edit
+        uses: taiki-e/install-action@67729d5c413db75907f0ad1e39bb04b9c868ff60 # v2.9.4
+        with:
+          tool: cargo-edit
+
+      - name: Bump version
+        run: |
+          cargo set-version --bump "${{ inputs.bump }}"
+          cargo update --workspace
+
+      - name: Commit, tag, and push
+        run: |
+          VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore: release v${VERSION}"
+          git tag "v${VERSION}"
+          git push origin main --follow-tags
+          echo "Tagged v${VERSION}. Now run the Release workflow on tag v${VERSION} with input tag=v${VERSION}." >> "$GITHUB_STEP_SUMMARY"
