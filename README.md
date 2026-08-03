@@ -22,6 +22,22 @@ Options:
 
 ## Installation
 
+### Homebrew (macOS/Linux)
+
+```bash
+brew install dreamorosi/tap/create-cdk-app
+```
+
+### Shell installer
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/dreamorosi/create-cdk-app-cli/releases/latest/download/create-cdk-app-installer.sh | sh
+```
+
+Prebuilt binaries for Apple Silicon macOS and x64/ARM64 Linux are also available on the [releases page](https://github.com/dreamorosi/create-cdk-app-cli/releases/latest).
+
+### From source
+
 Clone the repository and run the following commands:
 
 ```bash
