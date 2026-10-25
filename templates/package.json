@@ -20,7 +20,7 @@
     "aws-cdk": "2.1143.0",
     "esbuild": "^0.28.2",
     "typescript": "~7.0.2",
-    "vitest": "^5.0.2"
+    "vitest": "^5.0.5"
   },
   "dependencies": {
     "aws-cdk-lib": "2.271.0",
