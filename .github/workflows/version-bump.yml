@@ -41,7 +41,7 @@ jobs:
           toolchain: stable
 
       - name: Install cargo-edit
-        uses: taiki-e/install-action@4cef1412cce204788f482e778a0b9187f9626a29 # v2.9.4
+        uses: taiki-e/install-action@86f7a0ffb25f40114606501a311ebcfaf882ea32 # v2.9.4
         with:
           tool: cargo-edit
 
