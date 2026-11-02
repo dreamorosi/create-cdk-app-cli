@@ -14,7 +14,7 @@
     "update:deps": "npx npm-check-updates -u"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.14",
+    "@biomejs/biome": "^2.6.4",
     "@types/node": "26.6.6",
     "@types/aws-lambda": "^8.10.164",
     "aws-cdk": "2.1143.0",
