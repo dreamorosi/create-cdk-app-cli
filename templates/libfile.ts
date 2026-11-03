@@ -1,8 +1,8 @@
-import { Stack, type StackProps, CfnOutput, RemovalPolicy } from 'aws-cdk-lib';
-import type { Construct } from 'constructs';
+import { CfnOutput, RemovalPolicy, Stack, type StackProps } from 'aws-cdk-lib';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
+import type { Construct } from 'constructs';
 
 export class pascalcase-nameStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
