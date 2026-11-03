@@ -1,6 +1,41 @@
 use clap::Parser;
 use include_dir::{include_dir, Dir};
 use spinoff::{spinners, Color, Spinner};
+use std::io::IsTerminal;
+use std::process::Stdio;
+
+struct Progress {
+    spinner: Option<Spinner>,
+}
+
+impl Progress {
+    fn new(message: impl Into<String>) -> Self {
+        let message = message.into();
+        let spinner = if std::io::stdout().is_terminal() {
+            Some(Spinner::new(spinners::Dots, message, Color::Blue))
+        } else {
+            println!("{}", message);
+            None
+        };
+        Self { spinner }
+    }
+
+    fn success(&mut self, message: &str) {
+        if let Some(spinner) = &mut self.spinner {
+            spinner.success(message);
+        } else {
+            println!("{}", message);
+        }
+    }
+
+    fn fail(&mut self, message: &str) {
+        if let Some(spinner) = &mut self.spinner {
+            spinner.fail(message);
+        } else {
+            eprintln!("{}", message);
+        }
+    }
+}
 
 #[derive(Parser)]
 #[command(version, about = "Create a new CDK project scaffold 🚀")]
@@ -273,17 +308,19 @@ fn write_project_files(
 }
 
 fn install_dependencies(base_dir: &str) -> Result<(), String> {
-    let mut spinner = Spinner::new(spinners::Dots, "Installing npm packages...", Color::Blue);
+    let mut progress = Progress::new("Installing npm packages...");
 
-    let output = std::process::Command::new("npm")
-        .arg("ci")
-        .current_dir(base_dir)
-        .output();
+    let mut command = std::process::Command::new("npm");
+    command.arg("ci").current_dir(base_dir);
+    if progress.spinner.is_none() {
+        command.stdout(Stdio::inherit()).stderr(Stdio::inherit());
+    }
+    let output = command.output();
 
     match output {
         Ok(result) => {
             if !result.status.success() {
-                spinner.fail("npm ci failed!");
+                progress.fail("npm ci failed!");
                 let mut error_msg =
                     format!("npm ci failed with exit code: {:?}", result.status.code());
                 if !result.stderr.is_empty() {
@@ -296,10 +333,10 @@ fn install_dependencies(base_dir: &str) -> Result<(), String> {
                     .push_str("\nYou can try running 'npm ci' manually in the project directory.");
                 return Err(error_msg);
             }
-            spinner.success("New CDK project created successfully!");
+            progress.success("New CDK project created successfully!");
         }
         Err(e) => {
-            spinner.fail("Failed to run npm ci!");
+            progress.fail("Failed to run npm ci!");
             return Err(format!(
                 "Could not execute npm: {}. Make sure npm is installed and available in your PATH.",
                 e
@@ -321,17 +358,16 @@ fn main() {
         }
     };
 
-    let mut spinner = Spinner::new(
-        spinners::Dots,
-        format!("Creating a new CDK project with name {}...", app_name),
-        Color::Blue,
-    );
+    let mut progress = Progress::new(format!(
+        "Creating a new CDK project with name {}...",
+        app_name
+    ));
 
     let app_names = generate_app_names(&app_name);
     let paths = create_project_paths(&app_name);
 
     if let Err(e) = create_directories(&paths) {
-        spinner.fail("Failed to create directories!");
+        progress.fail("Failed to create directories!");
         eprintln!("Error: {}", e);
         std::process::exit(1);
     }
@@ -339,19 +375,19 @@ fn main() {
     let files = match load_template_files(&app_names) {
         Ok(files) => files,
         Err(e) => {
-            spinner.fail("Failed to load template files!");
+            progress.fail("Failed to load template files!");
             eprintln!("Error: {}", e);
             std::process::exit(1);
         }
     };
 
     if let Err(e) = write_project_files(&paths, &app_names, &files) {
-        spinner.fail("Failed to write project files!");
+        progress.fail("Failed to write project files!");
         eprintln!("Error: {}", e);
         std::process::exit(1);
     }
 
-    spinner.success("Scaffolding complete!");
+    progress.success("Scaffolding complete!");
 
     if args.no_install {
         println!("\nTo start working, run:\n\ncd {}", paths.base_dir);
